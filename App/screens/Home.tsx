@@ -1,27 +1,49 @@
 import React from 'react'
-import { View, Text, Image, StyleSheet } from 'react-native'
+import {
+  View,
+  ScrollView,
+  Image,
+  StyleSheet,
+  Button,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native'
 import useFetch, { ValidResponse } from '../hooks/useFetch'
+import { ContextObject } from '../components/Context'
 
 function Home() {
-  const [image, setImage] = React.useState('')
-
-  const { data } = useFetch(
-    'http://192.168.1.141/cam-hi.jpg',
+  const { resolution } = React.useContext(ContextObject)
+  const { data, getImage, loading } = useFetch(
+    `http://192.168.1.141/cam-${resolution}.jpg`,
     ValidResponse.blob
   )
-  console.log(data)
+
+  const [refreshing, setRefreshing] = React.useState(false)
+
+  async function handleCapture() {
+    await getImage()
+  }
 
   return (
-    <View>
-      <Text>Home</Text>
-      <Image source={{ uri: data }} style={styles.tinyLogo} />
-    </View>
+    <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleCapture} />
+      }
+    >
+      <View style={styles.container}>
+        {loading && <ActivityIndicator size="large" />}
+        <Image source={{ uri: data }} style={styles.tinyLogo} />
+        <Button onPress={handleCapture} title="Capture" />
+      </View>
+    </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     paddingTop: 50,
+    justifyContent: 'center',
   },
   tinyLogo: {
     width: 300,
@@ -32,7 +54,5 @@ const styles = StyleSheet.create({
     height: 58,
   },
 })
-
-//http://192.168.1.141/cam-hi.jpg
 
 export default Home
