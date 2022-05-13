@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Alert } from 'react-native'
 
 export enum ValidResponse {
@@ -11,34 +11,41 @@ function useFetch(url: string, type: ValidResponse = ValidResponse.json) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+  const getImage = React.useCallback(async () => {
     setLoading(true)
     setData(null)
     setError(null)
+    try {
+      const res = await fetch(url)
+      let obj: any = {}
 
-    const getImage = async () => {
-      try {
-        const res = await fetch(url)
-        let obj = {}
-        if (type === ValidResponse.blob) {
-          const blob = await res.blob()
-          obj = URL.createObjectURL(blob)
-        } else {
-          obj = await res.json()
+      if (type === ValidResponse.blob) {
+        let blob = await res.blob()
+        blob = new Blob([blob], {
+          type: 'text/vtt; charset=utf-8',
+        })
+        const fileReader = new FileReader()
+        fileReader.readAsDataURL(blob)
+        fileReader.onload = () => {
+          setData(fileReader.result)
         }
+      } else {
+        obj = await res.json()
         setData(obj)
-      } catch (error) {
-        console.log(error)
-        Alert.alert('Error', 'Failed fetch')
-      } finally {
-        setLoading(false)
       }
+    } catch (error) {
+      console.log(error)
+      Alert.alert('Error', 'Failed fetch')
+    } finally {
+      setLoading(false)
     }
+  }, [])
 
+  useEffect(() => {
     getImage()
-  }, [url])
+  }, [getImage])
 
-  return { data, loading, error }
+  return { data, loading, error, getImage }
 }
 
 export default useFetch
