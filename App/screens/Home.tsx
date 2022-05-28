@@ -1,4 +1,5 @@
 import React from 'react'
+import io from 'socket.io-client'
 import {
   View,
   ScrollView,
@@ -14,7 +15,7 @@ import { ContextObject } from '../components/Context'
 function Home() {
   const { resolution } = React.useContext(ContextObject)
   const { data, getImage, loading } = useFetch(
-    `http://192.168.1.141/cam-${resolution}.jpg`,
+    `http://192.168.68.115/cam-${resolution}.jpg`,
     ValidResponse.blob
   )
 
